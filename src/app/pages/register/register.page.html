@@ -1,0 +1,106 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/login" text="Volver" />
+    </ion-buttons>
+    <ion-title>Crear cuenta</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="auth-content">
+  <main class="auth-main page-main" tabindex="-1">
+    <ion-card class="auth-card">
+      <ion-card-content>
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate aria-labelledby="register-title">
+          <h1 id="register-title" class="form-title">Alta de usuario estándar</h1>
+          <p class="hint">Todos los campos son obligatorios.</p>
+
+          <ion-input
+            formControlName="name"
+            label="Nombre completo"
+            labelPlacement="floating"
+            fill="outline"
+            autocomplete="name"
+            [counter]="true"
+            maxlength="60"
+            errorText="Introduzca entre 3 y 60 caracteres."
+          />
+
+          <ion-input
+            formControlName="email"
+            type="email"
+            label="Correo electrónico"
+            labelPlacement="floating"
+            fill="outline"
+            autocomplete="email"
+            inputmode="email"
+            [errorText]="emailError()"
+            helperText="Se comprobará que no esté ya registrado."
+          />
+          <div class="live-region" aria-live="polite">
+            @if (emailStatus() === 'PENDING') {
+              <p class="checking"><ion-spinner name="dots" aria-hidden="true" /> Comprobando disponibilidad del correo…</p>
+            } @else if (emailStatus() === 'VALID') {
+              <p class="checking ok"><ion-icon name="checkmark-circle-outline" aria-hidden="true" /> Correo disponible.</p>
+            }
+          </div>
+
+          <ion-select
+            formControlName="department"
+            label="Departamento"
+            labelPlacement="floating"
+            fill="outline"
+            interface="popover"
+            errorText="Seleccione un departamento."
+          >
+            @for (d of departments; track d) {
+              <ion-select-option [value]="d">{{ d }}</ion-select-option>
+            }
+          </ion-select>
+
+          <ion-input
+            formControlName="password"
+            type="password"
+            label="Contraseña"
+            labelPlacement="floating"
+            fill="outline"
+            autocomplete="new-password"
+            helperText="Mínimo 8 caracteres con mayúscula, minúscula, número y símbolo."
+            [errorText]="passwordError()"
+          >
+            <ion-input-password-toggle slot="end" showLabel="Mostrar contraseña" hideLabel="Ocultar contraseña" />
+          </ion-input>
+
+          <ion-input
+            formControlName="confirm"
+            type="password"
+            label="Repita la contraseña"
+            labelPlacement="floating"
+            fill="outline"
+            autocomplete="new-password"
+            errorText="Repita la contraseña."
+          />
+          @if (form.hasError('mismatch') && form.controls.confirm.touched) {
+            <ion-text color="danger"><p class="form-error" role="alert">Las contraseñas no coinciden.</p></ion-text>
+          }
+
+          <div aria-live="assertive" class="live-region">
+            @if (error(); as message) {
+              <ion-text color="danger"><p class="form-error">{{ message }}</p></ion-text>
+            }
+          </div>
+
+          <ion-button type="submit" expand="block" [disabled]="saving() || form.pending">
+            @if (saving()) {
+              <ion-spinner name="crescent" aria-hidden="true" />
+              <span class="ion-padding-start">Creando cuenta…</span>
+            } @else {
+              Crear cuenta
+            }
+          </ion-button>
+        </form>
+        <p class="alt-action">¿Ya tiene cuenta? <a routerLink="/login">Inicie sesión</a></p>
+      </ion-card-content>
+    </ion-card>
+  </main>
+</ion-content>

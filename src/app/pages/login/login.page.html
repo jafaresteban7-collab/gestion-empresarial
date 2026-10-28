@@ -1,0 +1,67 @@
+<ion-content class="auth-content">
+  <main class="auth-main page-main" tabindex="-1">
+    <ion-card class="auth-card">
+      <ion-card-header>
+        <div class="brand" aria-hidden="true"><ion-icon name="cube-outline" /></div>
+        <h1 class="brand-title">GestiónPro</h1>
+        <p class="brand-subtitle">Sistema de gestión de inventario y pedidos</p>
+      </ion-card-header>
+
+      <ion-card-content>
+        @if (motivo() === 'expired') {
+          <p class="notice" role="status">Su sesión ha caducado. Vuelva a iniciar sesión.</p>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate aria-labelledby="login-title">
+          <h2 id="login-title" class="form-title">Iniciar sesión</h2>
+
+          <ion-input
+            formControlName="email"
+            type="email"
+            label="Correo electrónico"
+            labelPlacement="floating"
+            fill="outline"
+            autocomplete="username"
+            inputmode="email"
+            [required]="true"
+            errorText="Introduzca un correo electrónico válido."
+          />
+
+          <ion-input
+            formControlName="password"
+            type="password"
+            label="Contraseña"
+            labelPlacement="floating"
+            fill="outline"
+            autocomplete="current-password"
+            [required]="true"
+            errorText="La contraseña debe tener al menos 8 caracteres."
+          >
+            <ion-input-password-toggle slot="end" showLabel="Mostrar contraseña" hideLabel="Ocultar contraseña" />
+          </ion-input>
+
+          <ion-checkbox [(ngModel)]="remember" [ngModelOptions]="{ standalone: true }" labelPlacement="end">
+            Recordar mi correo en este dispositivo
+          </ion-checkbox>
+
+          <div aria-live="assertive" class="live-region">
+            @if (error(); as message) {
+              <ion-text color="danger"><p class="form-error">{{ message }}</p></ion-text>
+            }
+          </div>
+
+          <ion-button type="submit" expand="block" [disabled]="loading()">
+            @if (loading()) {
+              <ion-spinner name="crescent" aria-hidden="true" />
+              <span class="ion-padding-start">Comprobando…</span>
+            } @else {
+              Entrar
+            }
+          </ion-button>
+        </form>
+
+        <p class="alt-action">¿No tiene cuenta? <a routerLink="/registro">Cree una cuenta de usuario</a></p>
+      </ion-card-content>
+    </ion-card>
+  </main>
+</ion-content>
