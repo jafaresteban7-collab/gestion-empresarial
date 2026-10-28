@@ -1,0 +1,59 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start"><ion-menu-button aria-label="Abrir menú" /></ion-buttons>
+    <ion-title>Inicio</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/ayuda" fragment="inicio" aria-label="Ayuda sobre la página de inicio">
+        <ion-icon slot="icon-only" name="help-circle-outline" aria-hidden="true" />
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <main class="page-main" tabindex="-1">
+    <div class="page-head">
+      <div>
+        <h1 class="page-title">{{ greeting() }}, {{ auth.user()?.name }}</h1>
+        <p class="page-subtitle">Resumen del estado del inventario y de los pedidos.</p>
+      </div>
+    </div>
+
+    <app-load-state [loading]="store.loading()" [error]="store.error()" (retry)="reload()" />
+
+    @if (store.status() === 'ready') {
+      <section class="kpi-grid" aria-label="Resumen">
+        <app-stat-widget label="Productos en catálogo" icon="cube-outline" [value]="store.products().length.toString()" />
+        <app-stat-widget label="Valor del inventario" icon="cash-outline" tone="success" [value]="inventoryValue()" />
+        <app-stat-widget
+          label="Productos con stock bajo"
+          icon="warning-outline"
+          tone="danger"
+          [value]="store.lowStock().length.toString()"
+          hint="Menos de 10 unidades"
+        />
+        <app-stat-widget label="Pedidos de hoy" icon="receipt-outline" [value]="todayOrders().toString()" hint="Actualizado en tiempo real" />
+      </section>
+    }
+
+    <section class="panel" aria-labelledby="shortcuts-title">
+      <h2 id="shortcuts-title" class="section-title">Accesos directos</h2>
+      <div class="shortcuts">
+        @if (auth.isAdmin()) {
+          <ion-button routerLink="/dashboard" routerDirection="root">
+            <ion-icon slot="start" name="bar-chart-outline" aria-hidden="true" /> Cuadro de mando
+          </ion-button>
+          <ion-button fill="outline" routerLink="/productos/nuevo">
+            <ion-icon slot="start" name="add-circle-outline" aria-hidden="true" /> Nuevo producto
+          </ion-button>
+        }
+        <ion-button fill="outline" routerLink="/productos" routerDirection="root">
+          <ion-icon slot="start" name="cube-outline" aria-hidden="true" /> Ver inventario
+        </ion-button>
+        <ion-button fill="outline" routerLink="/actividad" routerDirection="root">
+          <ion-icon slot="start" name="pulse-outline" aria-hidden="true" /> Actividad en tiempo real
+        </ion-button>
+      </div>
+    </section>
+  </main>
+</ion-content>
