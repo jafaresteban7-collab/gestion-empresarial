@@ -1,0 +1,127 @@
+:host {
+  display: block;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar ion-searchbar {
+  flex: 1 1 260px;
+  padding: 0;
+}
+
+.count {
+  margin: 0;
+  color: var(--ion-color-medium-shade);
+  font-size: 0.875rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+th,
+td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--ion-color-step-150, #e3e6ec);
+}
+
+th {
+  font-weight: 600;
+  color: var(--ion-color-step-800, #333);
+  background: var(--ion-color-step-50, #f6f8fb);
+  white-space: nowrap;
+}
+
+.end {
+  text-align: right;
+}
+
+.sort-btn {
+  all: unset;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+
+  &:focus-visible {
+    outline: 3px solid var(--ion-color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+.actions {
+  white-space: nowrap;
+}
+
+.empty {
+  text-align: center;
+  padding: 24px;
+  color: var(--ion-color-medium-shade);
+}
+
+.pager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* Móvil (mobile-first invertido sobre tabla): cada fila como tarjeta */
+@media (max-width: 767px) {
+  thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  table,
+  tbody,
+  tr,
+  td {
+    display: block;
+    width: 100%;
+  }
+
+  tr {
+    border: 1px solid var(--ion-color-step-150, #e3e6ec);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    padding: 6px 0;
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    border: 0;
+    padding: 6px 12px;
+    text-align: right;
+
+    &::before {
+      content: attr(data-label);
+      font-weight: 600;
+      text-align: left;
+    }
+
+    &.empty::before {
+      content: none;
+    }
+  }
+}

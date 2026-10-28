@@ -1,0 +1,77 @@
+<div class="toolbar">
+  <ion-searchbar
+    [ngModel]="search"
+    (ngModelChange)="onSearch($event)"
+    [debounce]="200"
+    [placeholder]="searchPlaceholder()"
+    [attr.aria-label]="'Buscar en ' + caption()"
+    showClearButton="focus"
+  />
+  <p class="count" aria-live="polite">{{ rangeLabel() }}</p>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <caption class="sr-only">{{ caption() }}</caption>
+    <thead>
+      <tr>
+        @for (col of columns(); track col.key) {
+          <th scope="col" [attr.aria-sort]="ariaSort(col)" [class.end]="col.align === 'end'">
+            @if (col.sortable !== false) {
+              <button type="button" class="sort-btn" (click)="toggleSort(col)">
+                {{ col.label }}
+                <ion-icon
+                  aria-hidden="true"
+                  [name]="sortKey() === col.key ? (sortDir() === 'asc' ? 'arrow-up-outline' : 'arrow-down-outline') : 'swap-vertical-outline'"
+                />
+              </button>
+            } @else {
+              {{ col.label }}
+            }
+          </th>
+        }
+        @if (actions().length) {
+          <th scope="col" class="end">Acciones</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of pageRows(); track row.id) {
+        <tr>
+          @for (col of columns(); track col.key) {
+            <td [attr.data-label]="col.label" [class.end]="col.align === 'end'">{{ cell(col, row) }}</td>
+          }
+          @if (actions().length) {
+            <td class="end actions" data-label="Acciones">
+              @for (action of actions(); track action.id) {
+                <ion-button
+                  fill="clear"
+                  size="small"
+                  [color]="action.color ?? 'primary'"
+                  [attr.aria-label]="action.label + ': ' + rowLabel(row)"
+                  (click)="trigger(action, row)"
+                >
+                  <ion-icon slot="icon-only" [name]="action.icon" aria-hidden="true" />
+                </ion-button>
+              }
+            </td>
+          }
+        </tr>
+      } @empty {
+        <tr>
+          <td class="empty" [attr.colspan]="columns().length + (actions().length ? 1 : 0)">{{ emptyText() }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (pageCount() > 1) {
+  <nav class="pager" [attr.aria-label]="'Paginación de ' + caption()">
+    <ion-button fill="outline" size="small" [disabled]="page() === 0" (click)="goTo(page() - 1)">Anterior</ion-button>
+    <span aria-current="page">Página {{ page() + 1 }} de {{ pageCount() }}</span>
+    <ion-button fill="outline" size="small" [disabled]="page() >= pageCount() - 1" (click)="goTo(page() + 1)">
+      Siguiente
+    </ion-button>
+  </nav>
+}
