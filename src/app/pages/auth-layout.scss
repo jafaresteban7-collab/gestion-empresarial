@@ -1,0 +1,91 @@
+.auth-content {
+  --background: linear-gradient(160deg, #0b3a8c 0%, #1456c9 55%, #e8eefb 55%);
+}
+
+.auth-main {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  outline: none;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  margin: 0;
+  border-radius: 16px;
+}
+
+.brand {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: var(--ion-color-primary);
+  color: #fff;
+  font-size: 30px;
+  margin-bottom: 8px;
+}
+
+.brand-title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--ion-text-color);
+}
+
+.brand-subtitle {
+  margin: 4px 0 0;
+  color: var(--ion-color-step-700, #4a4f57);
+}
+
+.form-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin: 8px 0 16px;
+  color: var(--ion-text-color);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.notice {
+  background: #fff4e5;
+  color: #6b3d00;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.form-error {
+  margin: 0;
+  font-weight: 600;
+}
+
+.alt-action {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.hint {
+  font-size: 0.875rem;
+  color: var(--ion-color-medium-shade);
+  margin: -8px 0 0;
+}
+
+.checking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  margin: -8px 0 0;
+}
+
+.ok {
+  color: var(--ion-color-success-shade);
+}
