@@ -1,0 +1,69 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start"><ion-menu-button aria-label="Abrir menú" /></ion-buttons>
+    <ion-title>Actividad en tiempo real</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/ayuda" fragment="actividad" aria-label="Ayuda sobre la actividad en tiempo real">
+        <ion-icon slot="icon-only" name="help-circle-outline" aria-hidden="true" />
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <main class="page-main" tabindex="-1">
+    <div class="page-head">
+      <div>
+        <h1 class="page-title">Pedidos en tiempo real</h1>
+        <p class="page-subtitle">
+          <span class="live-dot" aria-hidden="true"></span>
+          Origen de datos: base de datos documental en tiempo real (NoSQL)
+        </p>
+      </div>
+      <div class="head-actions">
+        <ion-button fill="outline" (click)="exportCsv()" [disabled]="store.status() !== 'ready'">
+          <ion-icon slot="start" name="document-text-outline" aria-hidden="true" /> Exportar CSV
+        </ion-button>
+        <ion-button fill="outline" (click)="exportPdf()" [disabled]="store.status() !== 'ready'">
+          <ion-icon slot="start" name="cloud-download-outline" aria-hidden="true" /> Exportar PDF
+        </ion-button>
+      </div>
+    </div>
+
+    <p class="sr-only" aria-live="polite">{{ announcement() }}</p>
+    @if (announcement()) {
+      <p class="notice-inline" aria-hidden="true">{{ announcement() }}</p>
+    }
+
+    <section class="filters" aria-label="Filtros de pedidos">
+      <ion-select
+        [ngModel]="status()"
+        (ngModelChange)="status.set($event)"
+        label="Estado"
+        labelPlacement="stacked"
+        fill="outline"
+        interface="popover"
+      >
+        <ion-select-option value="todos">Todos</ion-select-option>
+        @for (s of statuses; track s) {
+          <ion-select-option [value]="s">{{ s }}</ion-select-option>
+        }
+      </ion-select>
+    </section>
+
+    <app-load-state [loading]="store.loading()" [error]="store.error()" (retry)="reload()" />
+
+    @if (store.status() === 'ready') {
+      <div class="panel">
+        <app-data-table
+          caption="Pedidos recibidos"
+          searchPlaceholder="Buscar producto, región…"
+          [columns]="columns"
+          [rows]="rows()"
+          [pageSize]="15"
+          (visibleRowsChange)="onVisibleRows($event)"
+        />
+      </div>
+    }
+  </main>
+</ion-content>

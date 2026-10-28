@@ -1,0 +1,71 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start"><ion-menu-button aria-label="Abrir menú" /></ion-buttons>
+    <ion-title>Productos</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/ayuda" fragment="productos" aria-label="Ayuda sobre productos">
+        <ion-icon slot="icon-only" name="help-circle-outline" aria-hidden="true" />
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <main class="page-main" tabindex="-1">
+    <div class="page-head">
+      <div>
+        <h1 class="page-title">Inventario de productos</h1>
+        <p class="page-subtitle">Origen de datos: API REST · base de datos relacional (SQL)</p>
+      </div>
+      <div class="head-actions">
+        <ion-button fill="outline" (click)="exportCsv()" [disabled]="store.status() !== 'ready'">
+          <ion-icon slot="start" name="document-text-outline" aria-hidden="true" /> Exportar CSV
+        </ion-button>
+        <ion-button fill="outline" (click)="exportPdf()" [disabled]="store.status() !== 'ready'">
+          <ion-icon slot="start" name="cloud-download-outline" aria-hidden="true" /> Exportar PDF
+        </ion-button>
+        @if (auth.isAdmin()) {
+          <ion-button routerLink="/productos/nuevo">
+            <ion-icon slot="start" name="add-circle-outline" aria-hidden="true" /> Nuevo producto
+          </ion-button>
+        }
+      </div>
+    </div>
+
+    <section class="filters" aria-label="Filtros de productos">
+      <ion-select
+        [ngModel]="category()"
+        (ngModelChange)="category.set($event)"
+        label="Categoría"
+        labelPlacement="stacked"
+        fill="outline"
+        interface="popover"
+      >
+        <ion-select-option value="todas">Todas</ion-select-option>
+        @for (c of categories; track c) {
+          <ion-select-option [value]="c">{{ c }}</ion-select-option>
+        }
+      </ion-select>
+      <ion-toggle [ngModel]="onlyLowStock()" (ngModelChange)="onlyLowStock.set($event)" labelPlacement="end">
+        Solo stock bajo
+      </ion-toggle>
+    </section>
+
+    <app-load-state [loading]="store.loading()" [error]="store.error()" (retry)="reload()" />
+
+    @if (store.status() === 'ready') {
+      <div class="panel">
+        <app-data-table
+          caption="Listado de productos del inventario"
+          searchPlaceholder="Buscar por SKU, nombre, proveedor…"
+          [columns]="columns"
+          [rows]="rows()"
+          [actions]="actions()"
+          initialSort="sku"
+          (actionTriggered)="onAction($event)"
+          (visibleRowsChange)="onVisibleRows($event)"
+        />
+      </div>
+    }
+  </main>
+</ion-content>

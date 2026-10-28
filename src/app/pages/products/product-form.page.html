@@ -1,0 +1,104 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/productos" text="Volver" />
+    </ion-buttons>
+    <ion-title>{{ isEdit() ? 'Editar producto' : 'Nuevo producto' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <main class="page-main narrow" tabindex="-1">
+    <h1 class="page-title">{{ isEdit() ? 'Editar producto' : 'Alta de producto' }}</h1>
+
+    <app-load-state [loading]="loading()" [error]="loadError()" loadingText="Cargando producto…" (retry)="loadProduct()" />
+
+    @if (!loading() && !loadError()) {
+      <form class="panel form-grid" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <ion-input
+          formControlName="sku"
+          label="SKU (código único)"
+          labelPlacement="floating"
+          fill="outline"
+          helperText="Formato: AA-000. Se comprueba que no exista."
+          [errorText]="skuError()"
+        />
+        <div class="live-region" aria-live="polite">
+          @if (skuStatus() === 'PENDING') {
+            <p class="checking"><ion-spinner name="dots" aria-hidden="true" /> Comprobando SKU…</p>
+          }
+        </div>
+
+        <ion-input
+          formControlName="name"
+          label="Nombre del producto"
+          labelPlacement="floating"
+          fill="outline"
+          [counter]="true"
+          maxlength="80"
+          errorText="Introduzca entre 3 y 80 caracteres."
+        />
+
+        <ion-select formControlName="category" label="Categoría" labelPlacement="floating" fill="outline" interface="popover">
+          @for (c of categories; track c) {
+            <ion-select-option [value]="c">{{ c }}</ion-select-option>
+          }
+        </ion-select>
+
+        <div class="two-cols">
+          <ion-input
+            formControlName="stock"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            label="Stock (unidades)"
+            labelPlacement="floating"
+            fill="outline"
+            errorText="Número entero mayor o igual que 0."
+          />
+          <ion-input
+            formControlName="price"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="0.01"
+            label="Precio (€)"
+            labelPlacement="floating"
+            fill="outline"
+            errorText="Importe mayor o igual que 0."
+          />
+        </div>
+
+        <ion-input
+          formControlName="supplier"
+          label="Proveedor (opcional)"
+          labelPlacement="floating"
+          fill="outline"
+          errorText="Máximo 60 caracteres."
+        />
+
+        @if (!isEdit()) {
+          <ion-toggle [(ngModel)]="keepAdding" [ngModelOptions]="{ standalone: true }" labelPlacement="end">
+            Seguir añadiendo productos tras guardar
+          </ion-toggle>
+        }
+
+        <div aria-live="assertive" class="live-region">
+          @if (error(); as message) {
+            <ion-text color="danger"><p class="form-error">{{ message }}</p></ion-text>
+          }
+        </div>
+
+        <div class="form-actions">
+          <ion-button type="submit" [disabled]="saving() || form.pending">
+            @if (saving()) {
+              <ion-spinner name="crescent" aria-hidden="true" /> <span class="ion-padding-start">Guardando…</span>
+            } @else {
+              {{ isEdit() ? 'Guardar cambios' : 'Crear producto' }}
+            }
+          </ion-button>
+        </div>
+      </form>
+    }
+  </main>
+</ion-content>

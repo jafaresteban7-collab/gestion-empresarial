@@ -1,0 +1,23 @@
+ion-item.selected {
+  --background: var(--ion-color-primary-tint-soft, #e6efff);
+  --color: var(--ion-color-primary-shade);
+  font-weight: 600;
+}
+
+ion-menu ion-item {
+  --border-radius: 8px;
+  margin: 2px 8px;
+}
+
+.user-card ion-avatar {
+  display: grid;
+  place-items: center;
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  font-weight: 700;
+}
+
+.user-card h2 {
+  font-size: 1rem;
+  font-weight: 600;
+}

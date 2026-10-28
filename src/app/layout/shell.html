@@ -1,0 +1,54 @@
+<a class="skip-link" href="#" (click)="skipToContent($event)">Saltar al contenido principal</a>
+<ion-split-pane contentId="main-outlet" when="lg">
+  <ion-menu contentId="main-outlet" type="overlay" aria-label="Menú principal">
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>GestiónPro</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <nav aria-label="Navegación principal">
+        <ion-list lines="none">
+          <ion-list-header>
+            <ion-label>Menú</ion-label>
+          </ion-list-header>
+          @for (entry of menu(); track entry.url) {
+            <ion-menu-toggle [autoHide]="false">
+              <ion-item
+                button
+                detail="false"
+                [routerLink]="entry.url"
+                routerDirection="root"
+                routerLinkActive="selected"
+                #rla="routerLinkActive"
+                [attr.aria-current]="rla.isActive ? 'page' : null"
+              >
+                <ion-icon slot="start" [name]="entry.icon" aria-hidden="true" />
+                <ion-label>{{ entry.label }}</ion-label>
+              </ion-item>
+            </ion-menu-toggle>
+          }
+        </ion-list>
+      </nav>
+    </ion-content>
+    <ion-footer>
+      <ion-item lines="none" class="user-card">
+        <ion-avatar slot="start" aria-hidden="true">
+          <span class="initials">{{ initials() }}</span>
+        </ion-avatar>
+        <ion-label>
+          <h2>{{ auth.user()?.name }}</h2>
+          <ion-note>{{ roleLabel() }}</ion-note>
+        </ion-label>
+      </ion-item>
+      <ion-menu-toggle [autoHide]="false">
+        <ion-item button detail="false" lines="none" (click)="logout()">
+          <ion-icon slot="start" name="log-out-outline" aria-hidden="true" />
+          <ion-label>Cerrar sesión</ion-label>
+        </ion-item>
+      </ion-menu-toggle>
+    </ion-footer>
+  </ion-menu>
+
+  <ion-router-outlet id="main-outlet" />
+</ion-split-pane>

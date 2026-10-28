@@ -1,0 +1,27 @@
+<section class="chart-card" [attr.aria-labelledby]="headingId">
+  <h2 class="chart-title" [id]="headingId">{{ title() }}</h2>
+  <div class="canvas-box" [class.doughnut]="type() === 'doughnut'">
+    <canvas #canvas role="img" [attr.aria-label]="description()"></canvas>
+  </div>
+  <table class="sr-only">
+    <caption>{{ title() }}</caption>
+    <thead>
+      <tr>
+        <th scope="col">Categoría</th>
+        @for (s of series(); track s.label) {
+          <th scope="col">{{ s.label }}</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of tableRows(); track row.label) {
+        <tr>
+          <th scope="row">{{ row.label }}</th>
+          @for (v of row.values; track $index) {
+            <td>{{ v }}</td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+</section>

@@ -1,0 +1,165 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start"><ion-menu-button aria-label="Abrir menú" /></ion-buttons>
+    <ion-title>Cuadro de mando</ion-title>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/ayuda" fragment="dashboard" aria-label="Ayuda sobre el cuadro de mando">
+        <ion-icon slot="icon-only" name="help-circle-outline" aria-hidden="true" />
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <main class="page-main" tabindex="-1">
+    <div class="page-head">
+      <div>
+        <h1 class="page-title">Cuadro de mando</h1>
+        <p class="page-subtitle">
+          <span class="live-dot" aria-hidden="true"></span>
+          Datos en tiempo real · última actualización {{ lastUpdateText() }}
+        </p>
+      </div>
+      <div class="head-actions">
+        <ion-button fill="outline" (click)="exportCsv()" [disabled]="store.status() !== 'ready'">
+          <ion-icon slot="start" name="document-text-outline" aria-hidden="true" /> CSV
+        </ion-button>
+        <ion-button (click)="exportPdf()" [disabled]="store.status() !== 'ready'">
+          <ion-icon slot="start" name="cloud-download-outline" aria-hidden="true" /> Informe PDF
+        </ion-button>
+      </div>
+    </div>
+
+    <section class="filters" aria-label="Filtros del cuadro de mando">
+      <ion-segment
+        [ngModel]="days()"
+        (ngModelChange)="days.set($event)"
+        aria-label="Periodo"
+        class="period"
+      >
+        <ion-segment-button [value]="7"><ion-label>7 días</ion-label></ion-segment-button>
+        <ion-segment-button [value]="30"><ion-label>30 días</ion-label></ion-segment-button>
+        <ion-segment-button [value]="90"><ion-label>90 días</ion-label></ion-segment-button>
+      </ion-segment>
+
+      <ion-select
+        [ngModel]="category()"
+        (ngModelChange)="category.set($event)"
+        label="Categoría"
+        labelPlacement="stacked"
+        fill="outline"
+        interface="popover"
+      >
+        <ion-select-option value="todas">Todas</ion-select-option>
+        @for (c of categories; track c) {
+          <ion-select-option [value]="c">{{ c }}</ion-select-option>
+        }
+      </ion-select>
+
+      <ion-select
+        [ngModel]="status()"
+        (ngModelChange)="status.set($event)"
+        label="Estado"
+        labelPlacement="stacked"
+        fill="outline"
+        interface="popover"
+      >
+        <ion-select-option value="todos">Todos</ion-select-option>
+        @for (s of statuses; track s) {
+          <ion-select-option [value]="s">{{ s }}</ion-select-option>
+        }
+      </ion-select>
+
+      <ion-button fill="clear" (click)="clearFilters()">Limpiar filtros</ion-button>
+    </section>
+    <p class="sr-only" aria-live="polite">Filtros aplicados: {{ filterSummary() }}</p>
+
+    <app-load-state [loading]="store.loading()" [error]="store.error()" (retry)="reload()" />
+
+    @if (store.status() === 'ready') {
+      <section class="kpi-grid" aria-label="Indicadores clave">
+        <app-stat-widget
+          label="Ingresos"
+          icon="cash-outline"
+          [value]="money(kpis().revenue)"
+          [trend]="kpis().revenueTrend"
+        />
+        <app-stat-widget
+          label="Pedidos"
+          icon="receipt-outline"
+          tone="success"
+          [value]="kpis().orders.toString()"
+          [trend]="kpis().ordersTrend"
+        />
+        <app-stat-widget
+          label="Ticket medio"
+          icon="trending-up-outline"
+          tone="primary"
+          [value]="money(kpis().avgTicket)"
+          hint="Pedidos no cancelados"
+        />
+        <app-stat-widget
+          label="Pendientes de envío"
+          icon="warning-outline"
+          tone="warning"
+          [value]="kpis().pending.toString()"
+          [interactive]="true"
+          [active]="status() === 'pendiente'"
+          hint="Pulse para filtrar"
+          (toggled)="onPendingToggled($event)"
+        />
+      </section>
+
+      <section class="chart-grid" aria-label="Gráficos">
+        <app-chart-card
+          class="wide"
+          type="line"
+          title="Ingresos diarios"
+          [description]="'Evolución de los ingresos diarios. ' + filterSummary()"
+          [labels]="daily().labels"
+          [series]="dailySeries()"
+          [valueFormat]="money"
+        />
+        <app-chart-card
+          type="doughnut"
+          title="Ingresos por categoría"
+          description="Reparto de ingresos por categoría. Pulse un sector para filtrar por esa categoría."
+          [labels]="categoryLabels"
+          [series]="categorySeries()"
+          [valueFormat]="money"
+          (pointSelected)="onCategoryPoint($event)"
+        />
+        <app-chart-card
+          type="bar"
+          title="Top 5 productos por ingresos"
+          description="Los cinco productos que más ingresos generan en el periodo."
+          [horizontal]="true"
+          [labels]="top().labels"
+          [series]="topSeries()"
+          [valueFormat]="money"
+        />
+        <app-chart-card
+          type="bar"
+          title="Pedidos por región"
+          description="Número de pedidos por región comercial en el periodo."
+          [labels]="regions().labels"
+          [series]="regionSeries()"
+        />
+      </section>
+
+      @if (store.lowStock().length) {
+        <section class="panel" aria-labelledby="low-stock-title">
+          <h2 id="low-stock-title" class="section-title">
+            <ion-icon name="alert-circle-outline" aria-hidden="true" /> Productos con stock bajo
+          </h2>
+          <ul class="chips">
+            @for (p of store.lowStock(); track p.id) {
+              <li>{{ p.name }} <strong>({{ p.stock }} uds.)</strong></li>
+            }
+          </ul>
+          <ion-button fill="clear" routerLink="/productos">Ir al inventario</ion-button>
+        </section>
+      }
+    }
+  </main>
+</ion-content>
