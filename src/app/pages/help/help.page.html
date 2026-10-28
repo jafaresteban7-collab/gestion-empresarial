@@ -1,0 +1,106 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start"><ion-menu-button aria-label="Abrir menú" /></ion-buttons>
+    <ion-title>Ayuda</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <main class="page-main narrow help" tabindex="-1">
+    <h1 class="page-title">Manual de usuario</h1>
+    <p class="page-subtitle">
+      Está conectado como <strong>{{ auth.isAdmin() ? 'Administrador' : 'Usuario estándar' }}</strong>.
+      Las secciones marcadas como «Solo Administrador» requieren ese rol.
+    </p>
+
+    <nav class="panel toc" aria-labelledby="toc-title">
+      <h2 id="toc-title" class="section-title">Contenido</h2>
+      <ol>
+        <li><a href="#" (click)="goTo('acceso', $event)">Acceso a la aplicación</a></li>
+        <li><a href="#" (click)="goTo('inicio', $event)">Página de inicio</a></li>
+        <li><a href="#" (click)="goTo('dashboard', $event)">Cuadro de mando</a></li>
+        <li><a href="#" (click)="goTo('productos', $event)">Productos</a></li>
+        <li><a href="#" (click)="goTo('actividad', $event)">Actividad en tiempo real</a></li>
+        <li><a href="#" (click)="goTo('informes', $event)">Exportar informes (PDF y CSV)</a></li>
+        <li><a href="#" (click)="goTo('accesibilidad', $event)">Accesibilidad y atajos de teclado</a></li>
+        <li><a href="#" (click)="goTo('faq', $event)">Preguntas frecuentes</a></li>
+      </ol>
+    </nav>
+
+    <section id="ayuda-acceso" tabindex="-1" class="panel">
+      <h2 class="section-title">1. Acceso a la aplicación</h2>
+      <p>Introduzca su correo y contraseña en la pantalla de inicio de sesión y pulse <strong>Entrar</strong>.</p>
+      <ul>
+        <li><strong>Crear cuenta:</strong> desde «Cree una cuenta de usuario». Mientras escribe el correo, la aplicación comprueba si ya está registrado.</li>
+        <li><strong>Contraseña:</strong> mínimo 8 caracteres con mayúscula, minúscula, número y símbolo.</li>
+        <li><strong>Sesión:</strong> caduca a la hora por seguridad; se le pedirá entrar de nuevo.</li>
+        <li><strong>Cerrar sesión:</strong> en la parte inferior del menú lateral.</li>
+      </ul>
+      <p>Existen dos roles: <strong>Administrador</strong> (acceso total) y <strong>Usuario estándar</strong> (consulta y exportación).</p>
+    </section>
+
+    <section id="ayuda-inicio" tabindex="-1" class="panel">
+      <h2 class="section-title">2. Página de inicio</h2>
+      <p>Muestra un resumen con el número de productos, el valor del inventario, los productos con stock bajo (menos de 10 unidades) y los pedidos del día, además de accesos directos.</p>
+    </section>
+
+    <section id="ayuda-dashboard" tabindex="-1" class="panel">
+      <h2 class="section-title">3. Cuadro de mando <span class="badge">Solo Administrador</span></h2>
+      <ul>
+        <li><strong>Periodo:</strong> elija 7, 30 o 90 días. Los indicadores comparan con el periodo anterior equivalente.</li>
+        <li><strong>Filtros:</strong> categoría y estado del pedido. Todos los gráficos se actualizan al instante.</li>
+        <li><strong>Gráfico de categorías:</strong> pulse un sector para filtrar por esa categoría; vuelva a pulsarlo para quitar el filtro.</li>
+        <li><strong>«Pendientes de envío»:</strong> pulse el indicador para ver solo pedidos pendientes.</li>
+        <li><strong>Tiempo real:</strong> los nuevos pedidos se incorporan automáticamente.</li>
+        <li><strong>Informe PDF / CSV:</strong> descarga el consolidado por categoría con los filtros aplicados.</li>
+      </ul>
+    </section>
+
+    <section id="ayuda-productos" tabindex="-1" class="panel">
+      <h2 class="section-title">4. Productos</h2>
+      <ul>
+        <li><strong>Buscar:</strong> escriba en el buscador; filtra por cualquier columna e ignora tildes.</li>
+        <li><strong>Ordenar:</strong> pulse el título de una columna (otra vez para invertir el orden).</li>
+        <li><strong>Filtrar:</strong> por categoría o activando «Solo stock bajo».</li>
+        <li><strong>Alta / edición / borrado</strong> <span class="badge">Solo Administrador</span>: botón «Nuevo producto» y botones de cada fila. El SKU debe tener el formato <code>AA-000</code> y ser único (se comprueba al escribir).</li>
+      </ul>
+    </section>
+
+    <section id="ayuda-actividad" tabindex="-1" class="panel">
+      <h2 class="section-title">5. Actividad en tiempo real</h2>
+      <p>Lista los pedidos según se registran. Cada pedido nuevo aparece arriba y se anuncia a los lectores de pantalla. Puede filtrar por estado, buscar y exportar.</p>
+    </section>
+
+    <section id="ayuda-informes" tabindex="-1" class="panel">
+      <h2 class="section-title">6. Exportar informes</h2>
+      <ul>
+        <li><strong>CSV:</strong> se abre con Excel o LibreOffice (separador punto y coma, UTF-8).</li>
+        <li><strong>PDF:</strong> informe maquetado con cabecera, resumen, tabla y paginación.</li>
+        <li>Se exporta exactamente lo que ve en la tabla: búsqueda, filtros y orden aplicados.</li>
+      </ul>
+    </section>
+
+    <section id="ayuda-accesibilidad" tabindex="-1" class="panel">
+      <h2 class="section-title">7. Accesibilidad y teclado</h2>
+      <ul>
+        <li><kbd>Tab</kbd> / <kbd>Mayús</kbd>+<kbd>Tab</kbd>: avanzar y retroceder entre elementos.</li>
+        <li><kbd>Intro</kbd> o <kbd>Espacio</kbd>: activar botones, enlaces y casillas.</li>
+        <li>El primer elemento de cada página es «Saltar al contenido principal».</li>
+        <li>El texto se adapta al tamaño de letra del navegador o sistema (zoom hasta el 200 %).</li>
+        <li>Los gráficos incluyen una tabla equivalente para lectores de pantalla.</li>
+      </ul>
+    </section>
+
+    <section id="ayuda-faq" tabindex="-1" class="panel">
+      <h2 class="section-title">8. Preguntas frecuentes</h2>
+      <dl>
+        <dt>¿Por qué no veo el cuadro de mando?</dt>
+        <dd>Solo está disponible para el rol Administrador.</dd>
+        <dt>¿Los datos son reales?</dt>
+        <dd>No. Todos los datos son sintéticos y no contienen información personal real.</dd>
+        <dt>Me aparece «Su sesión ha caducado».</dt>
+        <dd>Por seguridad la sesión dura una hora. Vuelva a iniciar sesión.</dd>
+      </dl>
+    </section>
+  </main>
+</ion-content>
