@@ -1,0 +1,27 @@
+@if (interactive()) {
+  <button type="button" class="card" [class]="'tone-' + tone()" [class.active]="active()" [attr.aria-pressed]="active()" (click)="toggle()">
+    <ng-container [ngTemplateOutlet]="body" />
+  </button>
+} @else {
+  <div class="card" [class]="'tone-' + tone()">
+    <ng-container [ngTemplateOutlet]="body" />
+  </div>
+}
+
+<ng-template #body>
+  <span class="icon" aria-hidden="true"><ion-icon [name]="icon()" /></span>
+  <span class="content">
+    <span class="label">{{ label() }}</span>
+    <span class="value">{{ value() }}</span>
+    @if (trendText()) {
+      <span class="trend" [class.up]="(trend() ?? 0) > 0" [class.down]="(trend() ?? 0) < 0">
+        <ion-icon [name]="trendIcon()" aria-hidden="true" />
+        <span class="sr-only">{{ trendWord() }}:</span>
+        {{ trendText() }} <span class="muted">vs. periodo anterior</span>
+      </span>
+    }
+    @if (hint()) {
+      <span class="hint">{{ hint() }}</span>
+    }
+  </span>
+</ng-template>
