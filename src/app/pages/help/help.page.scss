@@ -1,0 +1,40 @@
+.help section {
+  scroll-margin-top: 16px;
+  outline: none;
+
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--ion-color-primary);
+  }
+}
+
+.help li,
+.help dd {
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.help dt {
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #fdf0dc;
+  color: #6b3d00;
+  vertical-align: middle;
+}
+
+kbd {
+  padding: 1px 6px;
+  border: 1px solid #b8bec8;
+  border-radius: 4px;
+  background: #f6f8fb;
+  font-family: inherit;
+  font-size: 0.875em;
+}
