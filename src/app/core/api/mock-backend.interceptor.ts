@@ -8,13 +8,16 @@ import {
 import { defer, delay, from, materialize, dematerialize } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ProductInput, CATEGORIES } from '../models/product.model';
-import { LoginRequest, RegisterRequest, Role, User, UserRecord } from '../models/user.model';
+import { Permission, permissionsFor } from '../auth/permissions';
+import { LoginRequest, RegisterRequest, User, UserRecord } from '../models/user.model';
 import { hashPassword, randomSalt } from '../utils/crypto';
 import { JwtPayload, signJwt, verifyJwt } from '../utils/jwt';
 import { ConstraintError, SqlDatabase } from './sql-database';
 
-/** Duración de los tokens emitidos (1 hora). */
-const TOKEN_TTL_SECONDS = 60 * 60;
+/** Duración del token de acceso (15 minutos): limita el daño si se filtra. */
+export const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
+/** Duración del token de refresco (8 horas, una jornada laboral). */
+export const REFRESH_TOKEN_TTL_SECONDS = 8 * 60 * 60;
 
 /**
  * Clave de firma del backend SIMULADO. No es un secreto real: en un backend
@@ -56,6 +59,9 @@ async function route(req: HttpRequest<unknown>, path: string): Promise<HttpEvent
   if (method === 'POST' && path === '/auth/login') {
     return login(req.body as LoginRequest);
   }
+  if (method === 'POST' && path === '/auth/refresh') {
+    return refresh(req.body as { refreshToken?: string });
+  }
   if (method === 'POST' && path === '/auth/register') {
     return register(req.body as RegisterRequest);
   }
@@ -72,7 +78,7 @@ async function route(req: HttpRequest<unknown>, path: string): Promise<HttpEvent
     return user ? ok(toPublicUser(user)) : fail(404, 'Usuario no encontrado.');
   }
   if (method === 'GET' && path === '/users') {
-    requireRole(claims, 'admin');
+    requirePermission(claims, 'usuarios:gestionar');
     return ok(database().listUsers().map(toPublicUser));
   }
   if (method === 'GET' && path === '/products') {
@@ -90,12 +96,12 @@ async function route(req: HttpRequest<unknown>, path: string): Promise<HttpEvent
     return product ? ok(product) : fail(404, 'Producto no encontrado.');
   }
   if (method === 'POST' && path === '/products') {
-    requireRole(claims, 'admin');
+    requirePermission(claims, 'productos:editar');
     const input = validateProduct(req.body);
     return withConstraints(() => new HttpResponse({ status: 201, body: database().insertProduct(input) }));
   }
   if (method === 'PUT' && productMatch) {
-    requireRole(claims, 'admin');
+    requirePermission(claims, 'productos:editar');
     const input = validateProduct(req.body);
     return withConstraints(() => {
       const updated = database().updateProduct(Number(productMatch[1]), input);
@@ -103,7 +109,7 @@ async function route(req: HttpRequest<unknown>, path: string): Promise<HttpEvent
     });
   }
   if (method === 'DELETE' && productMatch) {
-    requireRole(claims, 'admin');
+    requirePermission(claims, 'productos:editar');
     return database().deleteProduct(Number(productMatch[1]))
       ? new HttpResponse({ status: 204 })
       : fail(404, 'Producto no encontrado.');
@@ -119,10 +125,33 @@ async function login(body: LoginRequest): Promise<HttpResponse<unknown>> {
   if (!user || hash !== user.passwordHash) {
     throw httpError(401, 'Correo o contraseña incorrectos.');
   }
+  return ok(await issueTokens(user));
+}
+
+/**
+ * Canjea un token de refresco válido por un par nuevo (rotación).
+ * El rol se vuelve a leer de la base de datos, así un cambio de permisos
+ * se aplica en el siguiente refresco sin esperar a un nuevo login.
+ */
+async function refresh(body: { refreshToken?: string }): Promise<HttpResponse<unknown>> {
+  const claims = body?.refreshToken ? await verifyJwt(body.refreshToken, MOCK_SIGNING_KEY) : null;
+  const user = claims?.typ === 'refresh' ? database().findUserById(claims.sub) : undefined;
+  if (!user) {
+    throw httpError(401, 'La sesión ha caducado. Inicie sesión de nuevo.');
+  }
+  return ok(await issueTokens(user));
+}
+
+/** Emite el token de acceso (con rol y permisos) y el de refresco. */
+async function issueTokens(user: UserRecord): Promise<{ token: string; refreshToken: string; user: User }> {
   const now = Math.floor(Date.now() / 1000);
-  const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role, iat: now, exp: now + TOKEN_TTL_SECONDS };
-  const token = await signJwt(payload, MOCK_SIGNING_KEY);
-  return ok({ token, user: toPublicUser(user) });
+  const base = { sub: user.id, email: user.email, role: user.role, iat: now };
+  const token = await signJwt(
+    { ...base, typ: 'access', perms: [...permissionsFor(user.role)], exp: now + ACCESS_TOKEN_TTL_SECONDS },
+    MOCK_SIGNING_KEY,
+  );
+  const refreshToken = await signJwt({ ...base, typ: 'refresh', exp: now + REFRESH_TOKEN_TTL_SECONDS }, MOCK_SIGNING_KEY);
+  return { token, refreshToken, user: toPublicUser(user) };
 }
 
 async function register(body: RegisterRequest): Promise<HttpResponse<unknown>> {
@@ -148,14 +177,19 @@ async function authenticate(req: HttpRequest<unknown>): Promise<JwtPayload> {
   const header = req.headers.get('Authorization') ?? '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : '';
   const claims = token ? await verifyJwt(token, MOCK_SIGNING_KEY) : null;
-  if (!claims) {
+  // Un token de refresco no sirve como credencial de acceso
+  if (!claims || claims.typ === 'refresh') {
     throw httpError(401, 'Sesión no válida o caducada.');
   }
   return claims;
 }
 
-function requireRole(claims: JwtPayload, role: Role): void {
-  if (claims.role !== role) {
+/**
+ * Autorización en el servidor: el permiso se deduce del rol con la matriz RBAC
+ * del propio servidor, no del claim `perms`, que es solo informativo para la UI.
+ */
+function requirePermission(claims: JwtPayload, permission: Permission): void {
+  if (!permissionsFor(claims.role).includes(permission)) {
     throw httpError(403, 'No tiene permisos para realizar esta acción.');
   }
 }

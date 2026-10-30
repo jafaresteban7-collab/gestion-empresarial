@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard, roleGuard } from './core/auth/auth.guards';
+import { authGuard, guestGuard, permissionGuard } from './core/auth/auth.guards';
 
 /**
  * Rutas de la aplicación. Todas las vistas se cargan de forma diferida
  * (lazy loading) con `loadComponent` / `loadChildren`, y se protegen con
- * guards `canMatch` según autenticación y rol.
+ * guards `canMatch` según autenticación y permisos (RBAC).
  */
 export const routes: Routes = [
   {
@@ -32,8 +32,8 @@ export const routes: Routes = [
       },
       {
         path: 'dashboard',
-        canMatch: [roleGuard],
-        data: { roles: ['admin'] },
+        canMatch: [permissionGuard],
+        data: { permissions: ['dashboard:ver'] },
         title: 'Cuadro de mando · GestiónPro',
         loadComponent: () => import('./pages/dashboard/dashboard.page').then((m) => m.DashboardPage),
       },
@@ -48,8 +48,8 @@ export const routes: Routes = [
       },
       {
         path: 'usuarios',
-        canMatch: [roleGuard],
-        data: { roles: ['admin'] },
+        canMatch: [permissionGuard],
+        data: { permissions: ['usuarios:gestionar'] },
         title: 'Usuarios · GestiónPro',
         loadComponent: () => import('./pages/users/users.page').then((m) => m.UsersPage),
       },

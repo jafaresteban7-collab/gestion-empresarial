@@ -22,6 +22,7 @@ import { toUserMessage } from '../../core/utils/errors';
 import { DataTable } from '../../shared/components/data-table/data-table';
 import { LoadState } from '../../shared/components/load-state/load-state';
 import { RowAction, RowActionEvent, TableColumn, fmt } from '../../shared/models/table-column';
+import { HasPermission } from '../../shared/directives/has-permission.directive';
 
 /**
  * Listado del inventario (datos SQL vía API REST).
@@ -46,6 +47,7 @@ import { RowAction, RowActionEvent, TableColumn, fmt } from '../../shared/models
     IonToggle,
     DataTable,
     LoadState,
+    HasPermission,
   ],
   templateUrl: './product-list.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -74,7 +76,7 @@ export class ProductListPage implements OnInit {
   ];
 
   protected readonly actions = computed<RowAction[]>(() =>
-    this.auth.isAdmin()
+    this.auth.can('productos:editar')
       ? [
           { id: 'edit', label: 'Editar', icon: 'create-outline' },
           { id: 'delete', label: 'Eliminar', icon: 'trash-outline', color: 'danger' },

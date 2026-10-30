@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, computed, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
 import { IonButtons } from '@ionic/angular/ion-buttons';
@@ -8,6 +8,7 @@ import { IonMenuButton } from '@ionic/angular/ion-menu-button';
 import { IonTitle } from '@ionic/angular/ion-title';
 import { IonToolbar } from '@ionic/angular/ion-toolbar';
 import { AuthService } from '../../core/auth/auth.service';
+import { ROLE_LABELS } from '../../core/models/user.model';
 
 /**
  * Manual de usuario integrado (ayuda contextual).
@@ -23,6 +24,10 @@ import { AuthService } from '../../core/auth/auth.service';
 })
 export class HelpPage {
   protected readonly auth = inject(AuthService);
+  protected readonly roleLabel = computed(() => {
+    const role = this.auth.role();
+    return role ? ROLE_LABELS[role] : '';
+  });
   private readonly host = inject(ElementRef<HTMLElement>);
   private readonly route = inject(ActivatedRoute);
 

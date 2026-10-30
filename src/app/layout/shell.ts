@@ -17,7 +17,8 @@ import { IonSplitPane } from '@ionic/angular/ion-split-pane';
 import { IonTitle } from '@ionic/angular/ion-title';
 import { IonToolbar } from '@ionic/angular/ion-toolbar';
 import { AuthService } from '../core/auth/auth.service';
-import { ROLE_LABELS, Role } from '../core/models/user.model';
+import { Permission } from '../core/auth/permissions';
+import { ROLE_LABELS } from '../core/models/user.model';
 import { InventoryStore } from '../core/store/inventory.store';
 
 /** Entrada del menú lateral. */
@@ -25,21 +26,22 @@ interface MenuEntry {
   label: string;
   url: string;
   icon: string;
-  roles: Role[];
+  /** Permiso necesario para ver la opción (`null` = cualquier usuario autenticado). */
+  permission: Permission | null;
 }
 
 const MENU: MenuEntry[] = [
-  { label: 'Inicio', url: '/inicio', icon: 'home-outline', roles: ['admin', 'user'] },
-  { label: 'Cuadro de mando', url: '/dashboard', icon: 'bar-chart-outline', roles: ['admin'] },
-  { label: 'Productos', url: '/productos', icon: 'cube-outline', roles: ['admin', 'user'] },
-  { label: 'Actividad en tiempo real', url: '/actividad', icon: 'pulse-outline', roles: ['admin', 'user'] },
-  { label: 'Usuarios', url: '/usuarios', icon: 'people-outline', roles: ['admin'] },
-  { label: 'Ayuda', url: '/ayuda', icon: 'help-circle-outline', roles: ['admin', 'user'] },
+  { label: 'Inicio', url: '/inicio', icon: 'home-outline', permission: null },
+  { label: 'Cuadro de mando', url: '/dashboard', icon: 'bar-chart-outline', permission: 'dashboard:ver' },
+  { label: 'Productos', url: '/productos', icon: 'cube-outline', permission: 'productos:ver' },
+  { label: 'Actividad en tiempo real', url: '/actividad', icon: 'pulse-outline', permission: 'pedidos:ver' },
+  { label: 'Usuarios', url: '/usuarios', icon: 'people-outline', permission: 'usuarios:gestionar' },
+  { label: 'Ayuda', url: '/ayuda', icon: 'help-circle-outline', permission: null },
 ];
 
 /**
  * Plantilla principal autenticada: menú lateral (split pane) que se convierte
- * en menú deslizante en móvil, con opciones filtradas según el rol.
+ * en menú deslizante en móvil, con opciones filtradas según los permisos.
  */
 @Component({
   selector: 'app-shell',
@@ -70,8 +72,8 @@ const MENU: MenuEntry[] = [
 export class Shell implements OnDestroy {
   protected readonly auth = inject(AuthService);
   private readonly store = inject(InventoryStore);
-  /** Opciones de menú visibles para el rol actual. */
-  protected readonly menu = computed(() => MENU.filter((m) => this.auth.hasRole(m.roles)));
+  /** Opciones de menú visibles con los permisos actuales (signal computada). */
+  protected readonly menu = computed(() => MENU.filter((m) => m.permission === null || this.auth.can(m.permission)));
   protected readonly roleLabel = computed(() => {
     const role = this.auth.role();
     return role ? ROLE_LABELS[role] : '';
