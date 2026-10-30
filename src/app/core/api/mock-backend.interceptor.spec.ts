@@ -2,6 +2,7 @@ import { HttpClient, HttpErrorResponse, provideHttpClient, withInterceptors } fr
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { LoginResponse } from '../models/user.model';
+import { decodeJwt } from '../utils/jwt';
 import { mockBackendInterceptor, resetMockDatabase } from './mock-backend.interceptor';
 import { SqlDatabase } from './sql-database';
 
@@ -57,6 +58,32 @@ describe('mockBackendInterceptor', () => {
     const created = await firstValueFrom(http.post<{ sku: string }>('/api/products', product, auth(token)));
     expect(created.sku).toBe('HW-999');
     expect(await status(firstValueFrom(http.post('/api/products', product, auth(token))))).toBe(409);
+  });
+
+  it('incluye los permisos del rol en el token de acceso', async () => {
+    const { token } = await login('usuario@empresa.test', 'Usuario2026!');
+    expect(decodeJwt(token)).toMatchObject({ typ: 'access', role: 'user', perms: ['productos:ver', 'pedidos:ver', 'informes:exportar'] });
+  });
+
+  it('solo el permiso usuarios:gestionar lista usuarios (403 para el usuario estándar)', async () => {
+    const user = await login('usuario@empresa.test', 'Usuario2026!');
+    const admin = await login('admin@empresa.test', 'Admin2026!');
+    expect(await status(firstValueFrom(http.get('/api/users', auth(user.token))))).toBe(403);
+    expect(await status(firstValueFrom(http.get('/api/users', auth(admin.token))))).toBe(200);
+  });
+
+  it('renueva la sesión con el token de refresco y rechaza usarlo como token de acceso', async () => {
+    const { refreshToken } = await login('admin@empresa.test', 'Admin2026!');
+    expect(await status(firstValueFrom(http.get('/api/products', auth(refreshToken))))).toBe(401);
+    const renewed = await firstValueFrom(http.post<LoginResponse>('/api/auth/refresh', { refreshToken }));
+    expect(decodeJwt(renewed.token)?.typ).toBe('access');
+    expect(await status(firstValueFrom(http.get('/api/products', auth(renewed.token))))).toBe(200);
+  });
+
+  it('no renueva con un token de acceso ni con uno manipulado (401)', async () => {
+    const { token } = await login('admin@empresa.test', 'Admin2026!');
+    expect(await status(firstValueFrom(http.post('/api/auth/refresh', { refreshToken: token })))).toBe(401);
+    expect(await status(firstValueFrom(http.post('/api/auth/refresh', { refreshToken: 'a.b.c' })))).toBe(401);
   });
 
   it('comprueba si un correo ya existe', async () => {

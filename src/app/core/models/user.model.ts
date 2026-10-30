@@ -31,10 +31,15 @@ export interface UserRecord extends User {
 
 /** Sesión activa del usuario autenticado. */
 export interface Session {
+  /** Token de acceso (JWT de corta duración). */
   token: string;
+  /** Token de refresco con el que se obtiene un nuevo token de acceso. */
+  refreshToken: string;
   user: User;
-  /** Instante de expiración (epoch ms) extraído del claim `exp` del JWT. */
+  /** Instante de expiración (epoch ms) del token de acceso, según su claim `exp`. */
   expiresAt: number;
+  /** Instante de expiración (epoch ms) del token de refresco: fin real de la sesión. */
+  refreshExpiresAt: number;
 }
 
 /** Cuerpo de la petición de inicio de sesión. */
@@ -46,6 +51,7 @@ export interface LoginRequest {
 /** Respuesta de la API de autenticación. */
 export interface LoginResponse {
   token: string;
+  refreshToken: string;
   user: User;
 }
 

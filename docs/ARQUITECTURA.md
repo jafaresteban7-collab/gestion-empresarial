@@ -47,10 +47,11 @@ El estado solo se modifica mediante métodos del store (flujo unidireccional); l
 ## Enrutamiento y seguridad
 
 - Todas las vistas se cargan con **lazy loading** (`loadComponent` / `loadChildren`) y precarga en segundo plano.
-- **Guards `canMatch`**: `authGuard` (sesión), `guestGuard` (login/registro) y `roleGuard` (`data.roles`). Con `canMatch` el código de una sección protegida ni siquiera se descarga si el usuario no tiene permiso.
-- **JWT**: la API firma tokens con `sub`, `role` y `exp`. El cliente solo lo decodifica para conocer rol y caducidad; **la API verifica firma, caducidad y rol en cada petición** (401/403), por lo que manipular el cliente no da acceso a los datos.
-- **Interceptor HTTP** (`authInterceptor`): añade `Authorization: Bearer` y cierra la sesión ante un 401.
-- Caducidad automática de la sesión mediante temporizador.
+- **Guards funcionales**: `authGuard` (sesión), `guestGuard` (login/registro) y `permissionGuard` (`data.permissions`) con `canMatch`, para que el código de una sección protegida ni siquiera se descargue; `unsavedChangesGuard` (`canDeactivate`) en el formulario de producto.
+- **RBAC por permisos** (`core/auth/permissions.ts`): cada rol tiene una lista de permisos `recurso:acción`; vistas, guards y API comprueban permisos, no roles. La directiva `*hasPermission` oculta lo que el usuario no puede usar.
+- **JWT**: token de acceso de 15 min con `sub`, `role`, `perms` y `exp`, y token de refresco de 8 h. **La API verifica firma, caducidad y permiso en cada petición** (401/403), por lo que manipular el cliente no da acceso a los datos.
+- **Interceptor HTTP** (`authInterceptor`): añade `Authorization: Bearer`; ante un 401 renueva el token y repite la petición, y ante un 403 lleva a *Acceso denegado*.
+- Detalle y alternativas evaluadas: [Arquitectura de seguridad](security-architecture.md).
 - Contraseñas almacenadas como **SHA-256 con sal**; nunca en claro.
 
 ## Orígenes de datos
