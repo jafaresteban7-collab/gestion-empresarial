@@ -6,8 +6,8 @@ Proyecto individual del módulo *Desarrollo de Interfaces (0488)*, CFGS Desarrol
 
 | | |
 | --- | --- |
-| 🌐 Aplicación en producción | `https://<tu-proyecto>.vercel.app` |
-| 📚 Documentación técnica (Compodoc) | `https://<tu-proyecto>.vercel.app/docs/` |
+| 🌐 Aplicación en producción | https://gestion-empresarial-hazel.vercel.app |
+| 📚 Documentación técnica (Compodoc) | https://gestion-empresarial-hazel.vercel.app/docs/ |
 | 📖 Manual de usuario | [docs/MANUAL_USUARIO.md](docs/MANUAL_USUARIO.md) · también dentro de la app en **Ayuda** |
 | 🏗️ Arquitectura | [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md) |
 
