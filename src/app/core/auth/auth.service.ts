@@ -1,11 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { NavController } from '@ionic/angular/nav-controller';
-import { Observable, map } from 'rxjs';
+import { Observable, finalize, map, shareReplay, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { LoginRequest, LoginResponse, RegisterRequest, Role, Session, User } from '../models/user.model';
-import { decodeJwt } from '../utils/jwt';
+import { JwtPayload, decodeJwt } from '../utils/jwt';
 import { readJson, removeKey, session as sessionStorageRef, writeJson } from '../utils/storage';
+import { Permission } from './permissions';
 
 const SESSION_KEY = 'ge.session';
 
@@ -13,10 +14,14 @@ const SESSION_KEY = 'ge.session';
  * Almacén (store) de autenticación basado en Signals.
  *
  * El estado de sesión solo se modifica a través de los métodos públicos
- * (`login`, `logout`), lo que hace que la gestión del estado sea predecible:
- * los componentes leen señales de solo lectura derivadas (`user`, `isAdmin`…).
- * La sesión se guarda en `sessionStorage` y caduca automáticamente
- * cuando expira el JWT.
+ * (`login`, `refreshSession`, `logout`), lo que hace que la gestión del estado
+ * sea predecible: los componentes leen señales de solo lectura derivadas
+ * (`user`, `permissions`…) y preguntan con `can(permiso)`, nunca por el rol.
+ *
+ * Autenticación (quién es) y autorización (qué puede hacer) quedan separadas:
+ * la identidad sale de `user` y los privilegios, de los claims del JWT.
+ * La sesión se guarda en `sessionStorage` y termina cuando caduca el token
+ * de refresco; el de acceso (15 min) se renueva sin que el usuario lo note.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -26,6 +31,8 @@ export class AuthService {
 
   private readonly state = signal<Session | null>(null);
   private expiryTimer?: ReturnType<typeof setTimeout>;
+  /** Renovación en curso, compartida por todas las peticiones que reciban 401 a la vez. */
+  private refreshInFlight$: Observable<string> | null = null;
 
   /** Sesión actual (solo lectura). */
   readonly session = this.state.asReadonly();
@@ -35,12 +42,17 @@ export class AuthService {
   readonly isAuthenticated = computed(() => this.state() !== null);
   /** Rol del usuario actual. */
   readonly role = computed<Role | null>(() => this.state()?.user.role ?? null);
-  /** `true` si el usuario es Administrador. */
-  readonly isAdmin = computed(() => this.role() === 'admin');
+  /** Claims del token de acceso actual (decodificados, no verificados: eso lo hace el servidor). */
+  readonly claims = computed<JwtPayload | null>(() => {
+    const token = this.state()?.token;
+    return token ? decodeJwt(token) : null;
+  });
+  /** Permisos efectivos del usuario, tal como los firmó el servidor en el claim `perms`. */
+  readonly permissions = computed<ReadonlySet<Permission>>(() => new Set(this.claims()?.perms ?? []));
 
   constructor() {
     const stored = readJson<Session>(sessionStorageRef(), SESSION_KEY);
-    if (stored && stored.expiresAt > Date.now()) {
+    if (stored?.refreshToken && stored.refreshExpiresAt > Date.now()) {
       this.setSession(stored);
     } else {
       removeKey(sessionStorageRef(), SESSION_KEY);
@@ -55,15 +67,26 @@ export class AuthService {
   /** Inicia sesión contra la API y guarda el token recibido. */
   login(credentials: LoginRequest): Observable<User> {
     return this.http.post<LoginResponse>(`${this.api}/auth/login`, credentials).pipe(
-      map(({ token, user }) => {
-        const claims = decodeJwt(token);
-        if (!claims) {
-          throw new Error('Token recibido no válido.');
-        }
-        this.setSession({ token, user, expiresAt: claims.exp * 1000 });
-        return user;
-      }),
+      map((response) => this.applyTokens(response).user),
     );
+  }
+
+  /**
+   * Obtiene un token de acceso nuevo con el de refresco (lo llama el interceptor ante un 401).
+   * Si varias peticiones fallan a la vez, todas esperan a la misma renovación.
+   * @returns Observable con el nuevo token de acceso.
+   */
+  refreshSession(): Observable<string> {
+    const refreshToken = this.state()?.refreshToken;
+    if (!refreshToken) {
+      return throwError(() => new Error('No hay sesión que renovar.'));
+    }
+    this.refreshInFlight$ ??= this.http.post<LoginResponse>(`${this.api}/auth/refresh`, { refreshToken }).pipe(
+      map((response) => this.applyTokens(response).token),
+      finalize(() => (this.refreshInFlight$ = null)),
+      shareReplay(1),
+    );
+    return this.refreshInFlight$;
   }
 
   /** Da de alta un nuevo usuario estándar. */
@@ -83,10 +106,14 @@ export class AuthService {
     return this.http.get<User[]>(`${this.api}/users`);
   }
 
-  /** Comprueba si el usuario actual tiene alguno de los roles indicados. */
-  hasRole(roles: readonly Role[]): boolean {
-    const role = this.role();
-    return role !== null && roles.includes(role);
+  /** Comprueba si el usuario actual tiene el permiso indicado. */
+  can(permission: Permission): boolean {
+    return this.permissions().has(permission);
+  }
+
+  /** Comprueba si el usuario actual tiene todos los permisos indicados. */
+  canAll(permissions: readonly Permission[]): boolean {
+    return permissions.every((p) => this.can(p));
   }
 
   /**
@@ -95,16 +122,36 @@ export class AuthService {
    */
   logout(reason?: 'expired'): void {
     clearTimeout(this.expiryTimer);
+    this.refreshInFlight$ = null;
     this.state.set(null);
     removeKey(sessionStorageRef(), SESSION_KEY);
     // navigateRoot vacía la pila de Ionic: se destruyen las vistas privadas cacheadas
     void this.nav.navigateRoot(['/login'], reason ? { queryParams: { motivo: reason } } : {});
   }
 
+  /** Valida los tokens recibidos del servidor y los guarda como sesión activa. */
+  private applyTokens({ token, refreshToken, user }: LoginResponse): Session {
+    const access = decodeJwt(token);
+    const refresh = decodeJwt(refreshToken);
+    if (!access || !refresh) {
+      throw new Error('Token recibido no válido.');
+    }
+    const session: Session = {
+      token,
+      refreshToken,
+      user,
+      expiresAt: access.exp * 1000,
+      refreshExpiresAt: refresh.exp * 1000,
+    };
+    this.setSession(session);
+    return session;
+  }
+
   private setSession(session: Session): void {
     this.state.set(session);
     writeJson(sessionStorageRef(), SESSION_KEY, session);
     clearTimeout(this.expiryTimer);
-    this.expiryTimer = setTimeout(() => this.logout('expired'), Math.max(0, session.expiresAt - Date.now()));
+    // La sesión termina cuando ya no se puede renovar
+    this.expiryTimer = setTimeout(() => this.logout('expired'), Math.max(0, session.refreshExpiresAt - Date.now()));
   }
 }

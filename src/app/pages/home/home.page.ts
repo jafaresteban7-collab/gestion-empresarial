@@ -13,6 +13,7 @@ import { InventoryStore } from '../../core/store/inventory.store';
 import { LoadState } from '../../shared/components/load-state/load-state';
 import { StatWidget } from '../../shared/components/stat-widget/stat-widget';
 import { fmt } from '../../shared/models/table-column';
+import { HasPermission } from '../../shared/directives/has-permission.directive';
 
 /** Página de inicio común a ambos roles: resumen rápido y accesos directos. */
 @Component({
@@ -29,6 +30,7 @@ import { fmt } from '../../shared/models/table-column';
     IonIcon,
     StatWidget,
     LoadState,
+    HasPermission,
   ],
   templateUrl: './home.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,

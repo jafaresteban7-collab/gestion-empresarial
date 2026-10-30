@@ -24,11 +24,9 @@
         <ion-button fill="outline" (click)="exportPdf()" [disabled]="store.status() !== 'ready'">
           <ion-icon slot="start" name="cloud-download-outline" aria-hidden="true" /> Exportar PDF
         </ion-button>
-        @if (auth.isAdmin()) {
-          <ion-button routerLink="/productos/nuevo">
-            <ion-icon slot="start" name="add-circle-outline" aria-hidden="true" /> Nuevo producto
-          </ion-button>
-        }
+        <ion-button *hasPermission="'productos:editar'" routerLink="/productos/nuevo">
+          <ion-icon slot="start" name="add-circle-outline" aria-hidden="true" /> Nuevo producto
+        </ion-button>
       </div>
     </div>
 

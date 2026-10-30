@@ -39,14 +39,12 @@
     <section class="panel" aria-labelledby="shortcuts-title">
       <h2 id="shortcuts-title" class="section-title">Accesos directos</h2>
       <div class="shortcuts">
-        @if (auth.isAdmin()) {
-          <ion-button routerLink="/dashboard" routerDirection="root">
-            <ion-icon slot="start" name="bar-chart-outline" aria-hidden="true" /> Cuadro de mando
-          </ion-button>
-          <ion-button fill="outline" routerLink="/productos/nuevo">
-            <ion-icon slot="start" name="add-circle-outline" aria-hidden="true" /> Nuevo producto
-          </ion-button>
-        }
+        <ion-button *hasPermission="'dashboard:ver'" routerLink="/dashboard" routerDirection="root">
+          <ion-icon slot="start" name="bar-chart-outline" aria-hidden="true" /> Cuadro de mando
+        </ion-button>
+        <ion-button *hasPermission="'productos:editar'" fill="outline" routerLink="/productos/nuevo">
+          <ion-icon slot="start" name="add-circle-outline" aria-hidden="true" /> Nuevo producto
+        </ion-button>
         <ion-button fill="outline" routerLink="/productos" routerDirection="root">
           <ion-icon slot="start" name="cube-outline" aria-hidden="true" /> Ver inventario
         </ion-button>

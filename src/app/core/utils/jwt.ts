@@ -1,3 +1,4 @@
+import type { Permission } from '../auth/permissions';
 import { Role } from '../models/user.model';
 import { base64UrlDecode, base64UrlEncode, sha256Hex } from './crypto';
 
@@ -7,6 +8,10 @@ export interface JwtPayload {
   sub: number;
   email: string;
   role: Role;
+  /** Permisos efectivos del rol (solo en tokens de acceso). */
+  perms?: Permission[];
+  /** Tipo de token: de acceso (corta duración) o de refresco (larga duración). */
+  typ?: 'access' | 'refresh';
   /** Emitido en (segundos epoch). */
   iat: number;
   /** Expira en (segundos epoch). */

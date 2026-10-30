@@ -16,6 +16,7 @@ import { IonTitle } from '@ionic/angular/ion-title';
 import { IonToggle } from '@ionic/angular/ion-toggle';
 import { IonToolbar } from '@ionic/angular/ion-toolbar';
 import { finalize } from 'rxjs';
+import { HasUnsavedChanges } from '../../core/auth/auth.guards';
 import { CATEGORIES, Category, ProductInput } from '../../core/models/product.model';
 import { NotificationService } from '../../core/services/notification.service';
 import { ProductService } from '../../core/services/product.service';
@@ -27,6 +28,8 @@ import { LoadState } from '../../shared/components/load-state/load-state';
 /**
  * Alta y edición de productos (solo Administrador).
  * El SKU se valida de forma asíncrona contra la API para garantizar que es único.
+ * Implementa {@link HasUnsavedChanges}: `unsavedChangesGuard` pide confirmación
+ * si se intenta salir con el formulario modificado y sin guardar.
  */
 @Component({
   selector: 'app-product-form',
@@ -51,7 +54,7 @@ import { LoadState } from '../../shared/components/load-state/load-state';
   templateUrl: './product-form.page.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ProductFormPage implements OnInit {
+export class ProductFormPage implements OnInit, HasUnsavedChanges {
   private readonly api = inject(ProductService);
   private readonly store = inject(InventoryStore);
   private readonly notify = inject(NotificationService);
@@ -87,6 +90,11 @@ export class ProductFormPage implements OnInit {
   protected readonly skuStatus = toSignal(this.form.controls.sku.statusChanges, {
     initialValue: this.form.controls.sku.status,
   });
+
+  /** Consultado por `unsavedChangesGuard` (canDeactivate) antes de salir de la vista. */
+  hasUnsavedChanges(): boolean {
+    return this.form.dirty && !this.saving();
+  }
 
   ngOnInit(): void {
     if (this.isEdit()) {
@@ -140,6 +148,7 @@ export class ProductFormPage implements OnInit {
           if (!this.isEdit() && this.keepAdding) {
             this.form.reset();
           } else {
+            this.form.markAsPristine();
             void this.router.navigate(['/productos']);
           }
         },

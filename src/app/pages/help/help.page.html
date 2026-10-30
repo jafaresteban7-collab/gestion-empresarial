@@ -9,7 +9,7 @@
   <main class="page-main narrow help" tabindex="-1">
     <h1 class="page-title">Manual de usuario</h1>
     <p class="page-subtitle">
-      Está conectado como <strong>{{ auth.isAdmin() ? 'Administrador' : 'Usuario estándar' }}</strong>.
+      Está conectado como <strong>{{ roleLabel() }}</strong>.
       Las secciones marcadas como «Solo Administrador» requieren ese rol.
     </p>
 
