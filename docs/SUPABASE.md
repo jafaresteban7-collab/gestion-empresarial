@@ -50,6 +50,6 @@ El usuario anónimo (`anon`) no puede leer ninguna tabla; solo puede llamar a `e
      SUPABASE_URL=https://xxxx.supabase.co
      SUPABASE_ANON_KEY=…
      ```
-   - En Vercel, como variables de entorno del proyecto (*Settings → Environment Variables*, entorno *Production*) con los mismos nombres.
+   - En producción, como secretos del repositorio en GitHub (*Settings → Secrets and variables → Actions*) con los mismos nombres. El pipeline se los pasa a la compilación. No sirven variables *Sensitive* de Vercel: el pipeline compila fuera de Vercel y solo recibe el texto `[SENSITIVE]`.
 
 `npm start`, `npm run build` y el pipeline ejecutan antes `scripts/supabase-config.mjs`, que genera `src/environments/supabase.config.ts` con esos valores. Ese fichero no se sube al repositorio.
