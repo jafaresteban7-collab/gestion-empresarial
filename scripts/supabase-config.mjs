@@ -1,7 +1,10 @@
 // Genera src/environments/supabase.config.ts con la URL y la clave pública (anon)
-// de Supabase. Los valores salen de las variables de entorno SUPABASE_URL y
-// SUPABASE_ANON_KEY (Vercel / CI) o, en local, del fichero .env.local.
-// Sin valores, la app usa el backend simulado (pruebas y desarrollo sin red).
+// de Supabase. Orden de búsqueda:
+//   1. GP_SUPABASE_URL / GP_SUPABASE_ANON_KEY (secretos de GitHub en el pipeline)
+//   2. SUPABASE_URL / SUPABASE_ANON_KEY (variables de entorno)
+//   3. el fichero .env.local (desarrollo)
+// Se descartan valores no válidos, como el "[SENSITIVE]" que devuelve Vercel con
+// variables sensibles. Sin valores válidos, la app usa el backend simulado.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const local = existsSync('.env.local')
@@ -15,11 +18,19 @@ const local = existsSync('.env.local')
   : {};
 
 // Acepta la URL del proyecto aunque se copie con /rest/v1 al final
-const url = (process.env.SUPABASE_URL ?? local.SUPABASE_URL ?? '')
-  .trim()
-  .replace(/\/(rest|auth)\/v1\/?$/, '')
-  .replace(/\/+$/, '');
-const key = (process.env.SUPABASE_ANON_KEY ?? local.SUPABASE_ANON_KEY ?? '').trim();
+const normalizeUrl = (value) =>
+  (value ?? '')
+    .trim()
+    .replace(/\/(rest|auth)\/v1\/?$/, '')
+    .replace(/\/+$/, '');
+const candidates = [
+  [process.env.GP_SUPABASE_URL, process.env.GP_SUPABASE_ANON_KEY],
+  [process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY],
+  [local.SUPABASE_URL, local.SUPABASE_ANON_KEY],
+]
+  .map(([u, k]) => [normalizeUrl(u), (k ?? '').trim()])
+  .filter(([u, k]) => /^https:\/\/[^\s[\]]+$/.test(u) && /^[\w.-]{20,}$/.test(k));
+const [url, key] = candidates[0] ?? ['', ''];
 
 writeFileSync(
   'src/environments/supabase.config.ts',
