@@ -5,7 +5,7 @@ import { base64UrlDecode, base64UrlEncode, sha256Hex } from './crypto';
 /** Claims incluidos en el token JWT de la aplicación. */
 export interface JwtPayload {
   /** Identificador del usuario. */
-  sub: number;
+  sub: number | string;
   email: string;
   role: Role;
   /** Permisos efectivos del rol (solo en tokens de acceso). */

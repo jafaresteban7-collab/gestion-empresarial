@@ -58,10 +58,10 @@ El estado solo se modifica mediante métodos del store (flujo unidireccional); l
 
 | Origen | Implementación | Equivalente real |
 | --- | --- | --- |
-| API REST + SQL | `mockBackendInterceptor` + `SqlDatabase` (tablas `users`, `products` con PK y restricciones `UNIQUE`) | API REST (Node/Spring/…) + PostgreSQL/MySQL |
-| Tiempo real NoSQL | `RealtimeDbService` (`collectionChanges()` ≈ `onSnapshot`, `add()` ≈ `addDoc`) | Firebase Firestore |
+| API REST + SQL | **Supabase**: PostgreSQL + API REST (PostgREST) + Supabase Auth, mediante `supabaseBackendInterceptor`. Sin configuración, `mockBackendInterceptor` + `SqlDatabase` en el navegador | Supabase (real) |
+| Tiempo real NoSQL | `RealtimeDbService` (`collectionChanges()` ≈ `onSnapshot`, `add()` ≈ `addDoc`) | Firebase Firestore (simulado) |
 
-Ambos están simulados para que el despliegue no dependa de servicios externos ni exponga claves. Sustituirlos por los reales solo exige quitar el interceptor de `app.config.ts` y cambiar la implementación de `RealtimeDbService`; los componentes no cambian.
+El origen SQL es real: usuarios y productos viven en Supabase, protegidos con Row Level Security (ver [Supabase](SUPABASE.md)). `app.config.ts` elige el interceptor según haya o no configuración, y los componentes no cambian. El origen NoSQL sigue simulado para no depender de un segundo servicio externo.
 
 La carga inicial de ambas fuentes se orquesta en paralelo con **`forkJoin`**; después se mantiene una suscripción en tiempo real. Los validadores asíncronos usan `timer` + `switchMap` (debounce y cancelación de peticiones obsoletas).
 

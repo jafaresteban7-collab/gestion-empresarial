@@ -74,7 +74,7 @@ async function route(req: HttpRequest<unknown>, path: string): Promise<HttpEvent
   const claims = await authenticate(req);
 
   if (method === 'GET' && path === '/auth/me') {
-    const user = database().findUserById(claims.sub);
+    const user = database().findUserById(Number(claims.sub));
     return user ? ok(toPublicUser(user)) : fail(404, 'Usuario no encontrado.');
   }
   if (method === 'GET' && path === '/users') {
@@ -135,7 +135,7 @@ async function login(body: LoginRequest): Promise<HttpResponse<unknown>> {
  */
 async function refresh(body: { refreshToken?: string }): Promise<HttpResponse<unknown>> {
   const claims = body?.refreshToken ? await verifyJwt(body.refreshToken, MOCK_SIGNING_KEY) : null;
-  const user = claims?.typ === 'refresh' ? database().findUserById(claims.sub) : undefined;
+  const user = claims?.typ === 'refresh' ? database().findUserById(Number(claims.sub)) : undefined;
   if (!user) {
     throw httpError(401, 'La sesión ha caducado. Inicie sesión de nuevo.');
   }
