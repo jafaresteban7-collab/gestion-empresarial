@@ -1,16 +1,17 @@
 {
   "name": "gestion-empresarial",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
+    "config": "node scripts/supabase-config.mjs",
+    "start": "npm run config && ng serve",
+    "build": "npm run config && ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "test:ci": "ng test --watch=false",
+    "test": "npm run config && ng test",
+    "test:ci": "npm run config && ng test --watch=false",
     "docs": "compodoc -p tsconfig.doc.json -d documentation -n \"GestiónPro - Documentación técnica\" --language es-ES --includes docs --includesName \"Manuales\" --hideGenerator",
     "docs:serve": "npm run docs -- --serve --port 8081",
-    "build:all": "ng build && compodoc -p tsconfig.doc.json -d dist/gestion-empresarial/browser/docs -n \"GestiónPro - Documentación técnica\" --language es-ES --includes docs --includesName \"Manuales\" --hideGenerator --silent"
+    "build:all": "npm run config && ng build && compodoc -p tsconfig.doc.json -d dist/gestion-empresarial/browser/docs -n \"GestiónPro - Documentación técnica\" --language es-ES --includes docs --includesName \"Manuales\" --hideGenerator --silent"
   },
   "private": true,
   "packageManager": "npm@11.19.0",

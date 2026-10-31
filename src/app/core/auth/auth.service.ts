@@ -6,9 +6,11 @@ import { environment } from '../../../environments/environment';
 import { LoginRequest, LoginResponse, RegisterRequest, Role, Session, User } from '../models/user.model';
 import { JwtPayload, decodeJwt } from '../utils/jwt';
 import { readJson, removeKey, session as sessionStorageRef, writeJson } from '../utils/storage';
-import { Permission } from './permissions';
+import { Permission, permissionsFor } from './permissions';
 
 const SESSION_KEY = 'ge.session';
+/** Duración de la sesión cuando el token de refresco no lleva caducidad (Supabase): 8 h. */
+const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 
 /**
  * Almacén (store) de autenticación basado en Signals.
@@ -47,8 +49,15 @@ export class AuthService {
     const token = this.state()?.token;
     return token ? decodeJwt(token) : null;
   });
-  /** Permisos efectivos del usuario, tal como los firmó el servidor en el claim `perms`. */
-  readonly permissions = computed<ReadonlySet<Permission>>(() => new Set(this.claims()?.perms ?? []));
+  /**
+   * Permisos efectivos del usuario: los del claim `perms` si el servidor los firma
+   * en el token (backend simulado) o, si no, los del rol de su perfil (Supabase).
+   * En ambos casos el servidor vuelve a comprobarlos en cada petición.
+   */
+  readonly permissions = computed<ReadonlySet<Permission>>(() => {
+    const role = this.role();
+    return new Set(this.claims()?.perms ?? (role ? permissionsFor(role) : []));
+  });
 
   constructor() {
     const stored = readJson<Session>(sessionStorageRef(), SESSION_KEY);
@@ -132,16 +141,17 @@ export class AuthService {
   /** Valida los tokens recibidos del servidor y los guarda como sesión activa. */
   private applyTokens({ token, refreshToken, user }: LoginResponse): Session {
     const access = decodeJwt(token);
-    const refresh = decodeJwt(refreshToken);
-    if (!access || !refresh) {
+    if (!access || !refreshToken) {
       throw new Error('Token recibido no válido.');
     }
+    // El token de refresco de Supabase es opaco (no es un JWT): la sesión dura SESSION_TTL_MS
+    const refresh = decodeJwt(refreshToken);
     const session: Session = {
       token,
       refreshToken,
       user,
       expiresAt: access.exp * 1000,
-      refreshExpiresAt: refresh.exp * 1000,
+      refreshExpiresAt: refresh ? refresh.exp * 1000 : Date.now() + SESSION_TTL_MS,
     };
     this.setSession(session);
     return session;

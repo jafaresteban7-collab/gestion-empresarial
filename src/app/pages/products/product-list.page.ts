@@ -23,6 +23,7 @@ import { DataTable } from '../../shared/components/data-table/data-table';
 import { LoadState } from '../../shared/components/load-state/load-state';
 import { RowAction, RowActionEvent, TableColumn, fmt } from '../../shared/models/table-column';
 import { HasPermission } from '../../shared/directives/has-permission.directive';
+import { environment } from '../../../environments/environment';
 
 /**
  * Listado del inventario (datos SQL vía API REST).
@@ -55,6 +56,10 @@ import { HasPermission } from '../../shared/directives/has-permission.directive'
 export class ProductListPage implements OnInit {
   protected readonly store = inject(InventoryStore);
   protected readonly auth = inject(AuthService);
+  /** Origen SQL activo: Supabase (PostgreSQL) o la API REST simulada. */
+  protected readonly dataSource = environment.useMockBackend
+    ? 'API REST · base de datos relacional (SQL)'
+    : 'Supabase · API REST sobre PostgreSQL (SQL)';
   private readonly api = inject(ProductService);
   private readonly exporter = inject(ReportExportService);
   private readonly notify = inject(NotificationService);

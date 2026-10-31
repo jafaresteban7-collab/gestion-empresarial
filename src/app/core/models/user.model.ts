@@ -13,7 +13,8 @@ export const ROLE_LABELS: Record<Role, string> = {
 
 /** Usuario público (nunca contiene credenciales). */
 export interface User {
-  id: number;
+  /** Numérico en el backend simulado; UUID de Supabase Auth con Supabase. */
+  id: number | string;
   name: string;
   email: string;
   role: Role;
@@ -23,6 +24,8 @@ export interface User {
 
 /** Registro de usuario tal como se guarda en la "tabla" SQL simulada. */
 export interface UserRecord extends User {
+  /** En la tabla simulada la clave primaria es numérica. */
+  id: number;
   /** Sal única por usuario. */
   salt: string;
   /** Hash SHA-256 de `sal:contraseña`. Nunca se guarda la contraseña en claro. */
