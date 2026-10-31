@@ -14,8 +14,12 @@ const local = existsSync('.env.local')
     )
   : {};
 
-const url = (process.env.SUPABASE_URL ?? local.SUPABASE_URL ?? '').replace(/\/+$/, '');
-const key = process.env.SUPABASE_ANON_KEY ?? local.SUPABASE_ANON_KEY ?? '';
+// Acepta la URL del proyecto aunque se copie con /rest/v1 al final
+const url = (process.env.SUPABASE_URL ?? local.SUPABASE_URL ?? '')
+  .trim()
+  .replace(/\/(rest|auth)\/v1\/?$/, '')
+  .replace(/\/+$/, '');
+const key = (process.env.SUPABASE_ANON_KEY ?? local.SUPABASE_ANON_KEY ?? '').trim();
 
 writeFileSync(
   'src/environments/supabase.config.ts',
