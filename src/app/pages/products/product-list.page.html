@@ -15,7 +15,7 @@
     <div class="page-head">
       <div>
         <h1 class="page-title">Inventario de productos</h1>
-        <p class="page-subtitle">Origen de datos: API REST · base de datos relacional (SQL)</p>
+        <p class="page-subtitle">Origen de datos: {{ dataSource }}</p>
       </div>
       <div class="head-actions">
         <ion-button fill="outline" (click)="exportCsv()" [disabled]="store.status() !== 'ready'">

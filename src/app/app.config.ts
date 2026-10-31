@@ -13,14 +13,16 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { provideIonicAngular } from '@ionic/angular/provide';
 import { routes } from './app.routes';
 import { mockBackendInterceptor } from './core/api/mock-backend.interceptor';
+import { supabaseBackendInterceptor } from './core/api/supabase-backend.interceptor';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { environment } from '../environments/environment';
 
 registerLocaleData(localeEs);
 
 /**
  * Configuración global de la aplicación (inyección de dependencias).
  * Orden de interceptores: primero se añade el JWT y después la petición
- * llega a la API REST (simulada).
+ * llega al backend: Supabase si está configurado, o la API REST simulada.
  */
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -29,7 +31,12 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideIonicAngular({ mode: 'md' }),
     provideRouter(routes, withComponentInputBinding(), withPreloading(PreloadAllModules)),
-    provideHttpClient(withInterceptors([authInterceptor, mockBackendInterceptor])),
+    provideHttpClient(
+      withInterceptors([
+        authInterceptor,
+        environment.useMockBackend ? mockBackendInterceptor : supabaseBackendInterceptor,
+      ]),
+    ),
     { provide: LOCALE_ID, useValue: 'es' },
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
